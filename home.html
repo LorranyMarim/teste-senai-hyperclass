@@ -3,189 +3,336 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Teste Online Presencial - HyperClass</title>
+  <title>Avaliação Online Presencial</title>
 
   <!-- Bootstrap 5 CSS -->
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-    crossorigin="anonymous"
-  />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
 
   <style>
-    body, html {
-      height: 100%;
-      background: #0b0c10;
+    :root{
+      --surface:#ffffff;
+      --surface-2:#f8f9fb;
+      --text:#0f172a;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --danger:#dc3545;
+      --warning:#ffc107;
+      --ok:#198754;
+      --shadow: 0 10px 30px rgba(15,23,42,.06);
     }
-    .instructions {
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      color: #eaeef2;
-      padding: 2rem;
+    html, body { height:100%; background:var(--surface-2); color:var(--text); }
+    .navbar-white { background:var(--surface); border-bottom:1px solid var(--border); box-shadow:0 6px 20px rgba(15,23,42,.04); }
+    .instructions { min-height:100vh; display:grid; place-items:center; padding:2rem; text-align:center; }
+    .card-white { background:var(--surface); color:var(--text); border:1px solid var(--border); box-shadow:var(--shadow); border-radius:1rem; }
+    .muted { color:var(--muted); }
+    .timer-badge { font-variant-numeric:tabular-nums; font-weight:700; letter-spacing:.5px; }
+    .form-wrap { padding-top:4.25rem; }
+    #formFrame { width:100%; height:calc(100vh - 4.25rem); border:none; background:var(--surface); display:block; margin:0 auto; max-width:900px; }
+
+    /* Banner de rede (online/offline) fixo no topo */
+    #netBanner { position:fixed; top:0; left:0; right:0; z-index:1080; border-radius:0; margin:0; }
+
+    /* Overlay de aviso (fullscreen/visibilidade) */
+    .guard-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,.65);
+      display: none; align-items: center; justify-content: center; z-index: 1090;
+      padding: 1rem;
+    }
+    .guard-overlay.show { display:flex; }
+    .guard-card {
+      background: var(--surface); color: var(--text);
+      border: 1px solid var(--border); border-radius: 1rem; box-shadow: var(--shadow);
+      max-width: 640px; width: 100%;
+      padding: 1.25rem;
       text-align: center;
     }
-    .timer-badge {
-      font-variant-numeric: tabular-nums;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-    .form-wrap {
-      padding-top: 4.25rem; /* espaço para navbar fixa */
-    }
-    /* iframe ocupa a altura visível menos a navbar */
-    #formFrame {
-      width: 100%;
-      height: calc(100vh - 4.25rem);
-      border: none;
-      background: #111217;
-      display: block;
-      margin: 0 auto;
-      max-width: 900px; /* limita largura em telas muito grandes */
-    }
+    .guard-card p { margin: .5rem 0; }
   </style>
 </head>
 <body>
 
-  <!-- Navbar fixa com cronômetro (aparece após começar) -->
-  <nav id="topbar" class="navbar navbar-dark bg-dark fixed-top d-none">
+  <!-- Navbar fixa com cronômetro -->
+  <nav id="topbar" class="navbar navbar-white fixed-top d-none">
     <div class="container-fluid justify-content-center">
-      <span class="navbar-text text-light">
+      <span class="navbar-text">
         Tempo restante:
-        <span id="timer" class="badge bg-warning text-dark timer-badge">02:00:00</span>
+        <span id="timer" class="badge bg-secondary text-light timer-badge" aria-live="polite">02:00:00</span>
       </span>
     </div>
   </nav>
+
+  <!-- Banner de rede (inserido dinamicamente em #netBanner) -->
+  <div id="netBanner" class="alert text-center m-0 d-none" role="alert"></div>
+
+  <!-- Overlay de aviso (fullscreen/visibilidade) -->
+  <div id="guardOverlay" class="guard-overlay" aria-live="polite" aria-modal="true">
+    <div class="guard-card">
+      <h5 class="mb-2">Atenção</h5>
+      <p id="guardMessage" class="muted">A avaliação exige que você permaneça em <strong>tela cheia</strong> e não alterne para outras abas.</p>
+      <div class="d-grid gap-2 mt-3">
+        <button id="returnFsBtn" class="btn btn-dark btn-lg">Voltar para tela cheia</button>
+        <small class="muted">Ao retornar para tela cheia, este aviso será fechado e você poderá continuar.</small>
+      </div>
+    </div>
+  </div>
 
   <!-- Bloco de instruções + botão -->
   <section id="intro" class="instructions">
     <div class="container">
       <div class="row justify-content-center">
         <div class="col-lg-8">
-          <h1 class="mb-3">Instruções para realização do teste</h1>
-          <div class="text-start bg-dark p-4 rounded-3 border border-secondary">
-            <ol class="mb-0">
-              <li>Ao clicar em <strong>Começar</strong>, o teste entrará em tela cheia e o cronômetro de <strong>2 horas</strong> será iniciado.</li>
-              <li>Não feche a aba durante a execução do teste. O tempo continuará contando.</li>
-              <li>Responda a todas as questões no formulário exibido.</li>
-              <li>Ao término do tempo, finalize e envie suas respostas.</li>
-            </ol>
+          <div class="card-white p-4">
+            <h1 class="mb-3">Instruções para realização do teste</h1>
+            <div class="text-start p-4 rounded-3 border" style="border-color: var(--border) !important;">
+              <ol class="mb-0">
+                <li>Ao clicar em <strong>Começar</strong>, o teste entrará em <strong>tela cheia</strong> e o cronômetro de <strong>2 horas</strong> será iniciado.</li>
+                <li>Não feche a aba durante a execução do teste. O tempo continuará contando.</li>
+                <li>Responda a todas as questões no formulário exibido.</li>
+                <li>Ao término do tempo, finalize e envie suas respostas.</li>
+              </ol>
+            </div>
+            <div class="d-grid mt-4">
+              <button id="startBtn" class="btn btn-dark btn-lg">Começar</button>
+            </div>
+            <p class="muted mt-3 mb-0">Dica: mantenha sua conexão estável durante todo o teste.</p>
           </div>
-          <div class="d-grid mt-4">
-            <button id="startBtn" class="btn btn-primary btn-lg">
-              Começar
-            </button>
-          </div>
-          <p class="text-secondary mt-3 mb-0">
-            Dica: mantenha sua conexão estável durante todo o teste.
-          </p>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Contêiner do formulário (inicia oculto) -->
-  <main id="exam" class="form-wrap d-none">
+  <main id="exam" class="form-wrap d-none" aria-live="polite">
     <div class="container-fluid">
       <iframe
         id="formFrame"
-        src="https://docs.google.com/forms/d/e/1FAIpQLSckVn12oUJo-kuoow3bE-E8zeZ03zUVUaN2QziQUweHwPnwlg/viewform?embedded=true"
+        src="https://docs.google.com/forms/d/e/1FAIpQLScbM57XLS5SW_Iq7RGRquyyRemJsxBNAkAsk5J2fNzQB_pMBw/viewform?embedded=true"
         allowfullscreen
-      >
-        Carregando…
-      </iframe>
+        title="Formulário de Avaliação"
+      >Carregando…</iframe>
     </div>
   </main>
 
-  <!-- Bootstrap JS (opcional, para componentes) -->
-  <script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-    crossorigin="anonymous"
-  ></script>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
     (function () {
-      const startBtn = document.getElementById('startBtn');
-      const intro = document.getElementById('intro');
-      const exam = document.getElementById('exam');
-      const topbar = document.getElementById('topbar');
-      const timerEl = document.getElementById('timer');
-      let ticking = false;
-      let intervalId = null;
+      // ===================== CONSTS / KEYS =====================
+      const KEY_USER   = 'examUser';     // sessão/login salvo no login
+      const KEY_END_AT = 'examEndAt';    // timestamp do término (ms desde epoch)
       const DURATION_MS = 2 * 60 * 60 * 1000; // 2h
 
-      function pad(n) { return String(n).padStart(2, '0'); }
+      // ===================== ELEMENTOS =====================
+      const startBtn   = document.getElementById('startBtn');
+      const intro      = document.getElementById('intro');
+      const exam       = document.getElementById('exam');
+      const topbar     = document.getElementById('topbar');
+      const timerEl    = document.getElementById('timer');
+      const netBanner  = document.getElementById('netBanner');
+      const guard      = document.getElementById('guardOverlay');
+      const guardMsg   = document.getElementById('guardMessage');
+      const returnFsBtn= document.getElementById('returnFsBtn');
+      const frame      = document.getElementById('formFrame');
 
-      function formatTime(msLeft) {
-        const totalSec = Math.max(0, Math.floor(msLeft / 1000));
-        const h = Math.floor(totalSec / 3600);
-        const m = Math.floor((totalSec % 3600) / 60);
-        const s = totalSec % 60;
+      // ===================== ESTADO =====================
+      let ticking   = false;
+      let intervalId= null;
+      let iframeTimeoutId = null;
+
+      // ===================== HELPERS =====================
+      function pad(n){ return String(n).padStart(2,'0'); }
+      function formatTime(msLeft){
+        const totalSec = Math.max(0, Math.floor(msLeft/1000));
+        const h = Math.floor(totalSec/3600);
+        const m = Math.floor((totalSec%3600)/60);
+        const s = totalSec%60;
         return `${pad(h)}:${pad(m)}:${pad(s)}`;
       }
+      function show(el){ el.classList.remove('d-none'); }
+      function hide(el){ el.classList.add('d-none'); }
 
+      // Banner de rede
+      function showNetBanner(msg, type='warning'){
+        netBanner.className = `alert alert-${type} text-center m-0`;
+        netBanner.textContent = msg;
+        netBanner.classList.remove('d-none');
+      }
+      function hideNetBanner(){ netBanner.classList.add('d-none'); }
+
+      // Overlay guard
+      function openGuard(message){
+        guardMsg.innerHTML = message;
+        guard.classList.add('show');
+      }
+      function closeGuard(){
+        guard.classList.remove('show');
+      }
+
+      // ===================== PRÉ-COND. DE ACESSO (sessão/login) =====================
+      window.addEventListener('DOMContentLoaded', () => {
+        const u = JSON.parse(localStorage.getItem(KEY_USER) || 'null');
+        if (!u || !u.email) {
+          // sem sessão -> volta para login
+          window.location.href = 'index.html';
+        }
+      });
+
+      // ===================== PERSISTÊNCIA DE TEMPO =====================
+      function getOrCreateEndAt() {
+        let endAt = Number(localStorage.getItem(KEY_END_AT) || 0);
+        if (!endAt) {
+          endAt = Date.now() + DURATION_MS;
+          localStorage.setItem(KEY_END_AT, String(endAt));
+        }
+        return endAt;
+      }
+      function clearEndAt() {
+        localStorage.removeItem(KEY_END_AT);
+      }
+
+      // ===================== CRONÔMETRO ROBUSTO =====================
       function startTimer() {
-        const endAt = Date.now() + DURATION_MS;
-        timerEl.textContent = formatTime(DURATION_MS);
-
-        intervalId = setInterval(() => {
+        const endAt = getOrCreateEndAt();
+        const tick = () => {
           const left = endAt - Date.now();
           timerEl.textContent = formatTime(left);
 
-          // aviso visual no fim
-          if (left <= 5 * 60 * 1000 && !timerEl.classList.contains('bg-danger')) {
-            // últimos 5 min
-            timerEl.classList.remove('bg-warning', 'text-dark');
-            timerEl.classList.add('bg-danger', 'text-light');
+          if (left <= 5*60*1000) {
+            timerEl.classList.remove('bg-secondary', 'text-light');
+            timerEl.classList.add('bg-danger','text-light');
           }
-
           if (left <= 0) {
             clearInterval(intervalId);
             timerEl.textContent = '00:00:00';
-            // Feedback final (não fecha o formulário automaticamente)
+            disableLeaveGuard();
+            // trava UI para evitar interação após o prazo
+            exam.style.pointerEvents = 'none';
+            exam.style.opacity = .6;
             alert('Tempo encerrado! Envie suas respostas agora.');
           }
-        }, 1000);
+        };
+        tick();
+        intervalId = setInterval(tick, 1000);
       }
 
-      async function goFullscreen() {
+      // ===================== FULLSCREEN =====================
+      async function requestFullscreen(){
         const el = document.documentElement;
-        try {
-          if (el.requestFullscreen) await el.requestFullscreen();
-          else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
-          else if (el.msRequestFullscreen) await el.msRequestFullscreen();
-        } catch (e) {
-          // Se falhar (bloqueio do navegador), seguimos sem fullscreen
-          console.warn('Não foi possível ativar tela cheia:', e);
-        }
+        if (el.requestFullscreen) await el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+        else if (el.msRequestFullscreen) await el.msRequestFullscreen();
       }
 
-      startBtn.addEventListener('click', async () => {
-        if (ticking) return; // evita múltiplos cliques
-        ticking = true;
+      // ===================== GUARDAR SAÍDA ACIDENTAL =====================
+      function beforeUnloadHandler(e){
+        // exibe prompt nativo
+        e.preventDefault();
+        e.returnValue = '';
+      }
+      function enableLeaveGuard(){ window.addEventListener('beforeunload', beforeUnloadHandler); }
+      function disableLeaveGuard(){ window.removeEventListener('beforeunload', beforeUnloadHandler); }
 
-        await goFullscreen();          // tenta entrar em tela cheia
-        startTimer();                  // inicia cronômetro
-        topbar.classList.remove('d-none');
-
-        // Alterna para o formulário
-        intro.classList.add('d-none');
-        exam.classList.remove('d-none');
-
-        // rola ao topo para garantir que o formulário esteja visível
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
-
-      // Ajusta a altura do iframe ao redimensionar (mantém a tela "cheia")
+      // ===================== RESIZE/ALTURA DO IFRAME =====================
       function adjustIframeHeight() {
         const navH = document.querySelector('.navbar.fixed-top')?.offsetHeight || 0;
-        const frame = document.getElementById('formFrame');
         frame.style.height = `calc(100vh - ${navH}px)`;
       }
-      window.addEventListener('resize', adjustIframeHeight);
+      let rAF;
+      function scheduleAdjust(){ if (rAF) cancelAnimationFrame(rAF); rAF = requestAnimationFrame(adjustIframeHeight); }
+
+      window.addEventListener('resize', scheduleAdjust);
       window.addEventListener('load', adjustIframeHeight);
+
+      // ===================== OFFLINE/ONLINE =====================
+      window.addEventListener('offline', () => showNetBanner('Você está offline. Suas respostas podem não ser enviadas.', 'warning'));
+      window.addEventListener('online',  () => hideNetBanner());
+
+      // ===================== VALIDAÇÃO DO IFRAME =====================
+      function armIframeWatchdog(){
+        // 15s para carregar
+        clearTimeout(iframeTimeoutId);
+        iframeTimeoutId = setTimeout(() => {
+          showNetBanner('Não foi possível carregar o formulário. Verifique a conexão e permissões do Google.', 'danger');
+        }, 15000);
+      }
+      frame.addEventListener('load', () => {
+        clearTimeout(iframeTimeoutId);
+        hideNetBanner();
+      });
+
+      // ===================== VISIBILIDADE E FULLSCREEN (apenas aviso + botão voltar) =====================
+      document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement && !intro.classList.contains('d-none')) {
+          // ainda não começou, ignore
+          return;
+        }
+        if (!document.fullscreenElement) {
+          openGuard('Você saiu do modo <strong>tela cheia</strong>. A avaliação exige tela cheia. Clique no botão abaixo para voltar e continuar.');
+        } else {
+          closeGuard();
+        }
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden' && !intro.classList.contains('d-none')) {
+          // ainda não começou, ignore
+          return;
+        }
+        if (document.visibilityState === 'hidden') {
+          openGuard('Você alternou para outra aba/janela. A avaliação exige permanência em <strong>tela cheia</strong>. Retorne para continuar.');
+        }
+      });
+
+      returnFsBtn.addEventListener('click', async () => {
+        try { await requestFullscreen(); closeGuard(); } catch(e){ /* ignore */ }
+      });
+
+      // ===================== EVITAR MÚLTIPLOS "COMEÇAR" + INICIAR =====================
+      startBtn.addEventListener('click', async () => {
+        if (ticking) return;
+        ticking = true;
+        startBtn.disabled = true;
+        startBtn.classList.add('disabled');
+
+        try { await requestFullscreen(); } catch(e){ /* segue sem FS se o navegador bloquear */ }
+
+        // Persistência + retomada
+        startTimer();
+        show(topbar);
+        intro.classList.add('d-none');
+        exam.classList.remove('d-none');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Guarda de saída
+        enableLeaveGuard();
+
+        // Watchdog do iframe
+        armIframeWatchdog();
+
+        // Ajuste de altura
+        adjustIframeHeight();
+      });
+
+      // ===================== RETOMADA AUTOMÁTICA (se a página recarregar) =====================
+      window.addEventListener('DOMContentLoaded', () => {
+        const hasEndAt = !!localStorage.getItem(KEY_END_AT);
+        if (hasEndAt) {
+          // Já estava em prova
+          show(topbar);
+          intro.classList.add('d-none');
+          exam.classList.remove('d-none');
+
+          // Protege botão e estado
+          if (startBtn) { startBtn.disabled = true; startBtn.classList.add('disabled'); }
+
+          // Religa guarda, timer e watchdog
+          enableLeaveGuard();
+          startTimer();
+          armIframeWatchdog();
+          adjustIframeHeight();
+        }
+      });
     })();
   </script>
 </body>
