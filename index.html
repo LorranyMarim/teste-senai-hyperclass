@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Login • Teste – Formulário</title>
+  <title>Login</title>
 
   <!-- Bootstrap 5 CSS -->
   <link
@@ -15,13 +15,30 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <style>
-    html, body { height: 100%; background:#0b0c10; }
+    :root{
+      --surface: #ffffff;
+      --surface-2:#f8f9fb;
+      --text:#0f172a;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+    }
+    html, body { height: 100%; background: var(--surface-2); color: var(--text); }
     .center-wrap { min-height: 100vh; display:grid; place-items:center; }
-    .card-dark { background:#111217; color:#eaeef2; border:1px solid #2a2d39; }
+    .card-white {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 30px rgba(15,23,42,.06);
+      border-radius: 1rem;
+    }
     .brand { font-weight:700; letter-spacing:.3px; }
     .timer-badge { font-variant-numeric: tabular-nums; font-weight:700; letter-spacing:.5px; }
-    .form-wrap { padding-top: 4.25rem; }
-    #formFrame { width:100%; height:calc(100vh - 4.25rem); border:none; background:#111217; display:block; margin:0 auto; max-width:900px; }
+    .muted { color: var(--muted); }
+    #formFrame { width:100%; height:calc(100vh - 4.25rem); border:none; background:var(--surface); display:block; margin:0 auto; max-width:900px; }
+    .navbar-white {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
   </style>
 </head>
 <body>
@@ -31,14 +48,15 @@
     <div class="container">
       <div class="row justify-content-center">
         <div class="col-md-8 col-lg-6">
-          <div class="card card-dark p-4 rounded-4 shadow-lg">
+          <div class="card card-white p-4">
             <div class="text-center mb-3">
-              <div class="brand fs-4">Portal de Testes SENAI</div>
-              <small class="text-secondary">Acesse com seu e-mail institucional</small>
+              <div class="brand fs-4">Portal de Avaliações - HyperClass</div>
+              <small class="muted">Acesse com sua conta Google @senaimgaluno.com.br</small>
             </div>
 
-            <div class="alert alert-dark border-secondary text-secondary" role="alert">
-              <strong>Importante:</strong> use sua conta Google <kbd>@senaimgaluno.com.br</kbd>.
+            <!-- Aviso leve -->
+            <div class="alert alert-light border" role="alert">
+              <strong>Observação:</strong> você deve fazer login para dar início a avaliação.
             </div>
 
             <!-- Botão Google Sign-In -->
@@ -51,7 +69,7 @@
               <div class="g_id_signin"
                    data-type="standard"
                    data-size="large"
-                   data-theme="filled_black"
+                   data-theme="outline"
                    data-text="signin_with"
                    data-shape="rectangular"
                    data-logo_alignment="left">
@@ -61,7 +79,7 @@
             <div id="loginMsg" class="text-danger mt-3" style="display:none;"></div>
 
             <div class="mt-4 text-center">
-              <small class="text-secondary">Ao continuar, você concorda com os termos do teste.</small>
+              <small class="muted">Ao continuar, você concorda com os termos do teste.</small>
             </div>
           </div>
         </div>
@@ -69,26 +87,26 @@
     </div>
   </section>
 
-  <!-- ====== TELA DO TESTE (oculta até login OK) ====== -->
-  <!-- Navbar fixa com cronômetro -->
-  <nav id="topbar" class="navbar navbar-dark bg-dark fixed-top d-none">
+  <!-- ====== (A PARTIR DAQUI ERA O FLUXO DO TESTE) ====== -->
+  <!-- Mantido apenas se você ainda precisar; não será exibido porque haverá redirecionamento para home.html após login -->
+
+  <nav id="topbar" class="navbar navbar-white fixed-top d-none">
     <div class="container-fluid justify-content-center">
-      <span class="navbar-text text-light">
+      <span class="navbar-text">
         Tempo restante:
-        <span id="timer" class="badge bg-warning text-dark timer-badge">02:00:00</span>
+        <span id="timer" class="badge bg-secondary text-light timer-badge">02:00:00</span>
       </span>
-      <span id="userInfo" class="navbar-text text-secondary ms-3" style="font-size:0.9rem;"></span>
+      <span id="userInfo" class="navbar-text ms-3" style="font-size:0.9rem;"></span>
     </div>
   </nav>
 
-  <!-- Introdução / Instruções -->
   <section id="intro" class="center-wrap d-none">
     <div class="container">
       <div class="row justify-content-center">
         <div class="col-lg-8">
-          <div class="card card-dark p-4 rounded-4 shadow-lg">
+          <div class="card card-white p-4">
             <h1 class="mb-3">Instruções para realização do teste</h1>
-            <div class="text-start bg-dark p-4 rounded-3 border border-secondary">
+            <div class="text-start p-4 rounded-3 border">
               <ol class="mb-0">
                 <li>Ao clicar em <strong>Começar</strong>, o teste entrará em <strong>tela cheia</strong> e o cronômetro de <strong>2 horas</strong> será iniciado.</li>
                 <li>Não feche a aba durante a execução do teste. O tempo continuará contando.</li>
@@ -97,17 +115,16 @@
               </ol>
             </div>
             <div class="d-grid mt-4">
-              <button id="startBtn" class="btn btn-primary btn-lg">Começar</button>
+              <button id="startBtn" class="btn btn-dark btn-lg">Começar</button>
             </div>
-            <p class="text-secondary mt-3 mb-0">Dica: mantenha sua conexão estável durante todo o teste.</p>
+            <p class="muted mt-3 mb-0">Dica: mantenha sua conexão estável durante todo o teste.</p>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Formulário incorporado -->
-  <main id="exam" class="form-wrap d-none">
+  <main id="exam" class="d-none">
     <div class="container-fluid">
       <iframe
         id="formFrame"
@@ -155,31 +172,25 @@
     let ticking = false;
     let intervalId = null;
     const DURATION_MS = 2 * 60 * 60 * 1000; // 2h
-    const ALLOWED_DOMAIN = 'senaimgaluno.com.br';
 
     // ===== Login callback (Google Identity Services) =====
     window.handleCredentialResponse = (response) => {
       try {
         const payload = parseJwt(response.credential);
         const email = payload.email;
-        const hd = payload.hd; // domínio do Google Workspace (quando aplicável)
+        const name = payload.name || '';
 
-        // Checagem de domínio (hd e e-mail)
-        const okDomain = (hd === ALLOWED_DOMAIN) || (email && email.endsWith('@' + ALLOWED_DOMAIN));
-
-        if (!okDomain) {
+        if (!email) {
           loginMsg.style.display = 'block';
-          loginMsg.textContent = 'Conta não permitida. Use seu e-mail @senaimgaluno.com.br.';
+          loginMsg.textContent = 'Não foi possível obter o e-mail da conta Google.';
           return;
         }
 
-        // Guardar sessão simples no localStorage (opcional)
-        localStorage.setItem('examUser', JSON.stringify({ email, name: payload.name || '' }));
+        // Guardar sessão simples no localStorage
+        localStorage.setItem('examUser', JSON.stringify({ email, name }));
 
-        // Avança para a tela do teste
-        userInfo.textContent = `Logado: ${email}`;
-        hide(loginView);
-        show(intro);
+        // Redireciona para a home após login com QUALQUER conta Google
+        window.location.href = 'home.html';
 
       } catch (e) {
         console.error(e);
@@ -188,21 +199,19 @@
       }
     };
 
-    // Persistência básica: se já logado, pula o login
+    // Se já estiver logado, vai direto para a home
     (function restoreSession(){
       const raw = localStorage.getItem('examUser');
       if (!raw) return;
       try {
         const u = JSON.parse(raw);
-        if (u && u.email && u.email.endsWith('@' + ALLOWED_DOMAIN)) {
-          userInfo.textContent = `Logado: ${u.email}`;
-          hide(loginView);
-          show(intro);
+        if (u && u.email) {
+          window.location.href = 'home.html';
         }
       } catch {}
     })();
 
-    // ===== Fluxo do teste =====
+    // ===== Fluxo do teste (mantido, mas não usado quando há redirecionamento) =====
     function startTimer() {
       const endAt = Date.now() + DURATION_MS;
       timerEl.textContent = formatTime(DURATION_MS);
@@ -212,7 +221,7 @@
         timerEl.textContent = formatTime(left);
 
         if (left <= 5 * 60 * 1000 && !timerEl.classList.contains('bg-danger')) {
-          timerEl.classList.remove('bg-warning','text-dark');
+          timerEl.classList.remove('bg-secondary','text-light');
           timerEl.classList.add('bg-danger','text-light');
         }
         if (left <= 0) {
@@ -234,25 +243,26 @@
       }
     }
 
-    startBtn.addEventListener('click', async () => {
-      if (ticking) return;
-      ticking = true;
+    if (startBtn) {
+      startBtn.addEventListener('click', async () => {
+        if (ticking) return;
+        ticking = true;
 
-      await goFullscreen();
-      startTimer();
-      show(topbar);
+        await goFullscreen();
+        startTimer();
+        show(topbar);
 
-      hide(intro);
-      show(exam);
+        hide(intro);
+        show(exam);
 
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
 
-    // Ajusta altura do iframe ao redimensionar
     function adjustIframeHeight() {
       const navH = document.querySelector('.navbar.fixed-top')?.offsetHeight || 0;
       const frame = document.getElementById('formFrame');
-      frame.style.height = `calc(100vh - ${navH}px)`;
+      if (frame) frame.style.height = `calc(100vh - ${navH}px)`;
     }
     window.addEventListener('resize', adjustIframeHeight);
     window.addEventListener('load', adjustIframeHeight);
